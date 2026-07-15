@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🧄 蒜の包 發文工具</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,'PingFang TC',sans-serif; background:#FBF7F0; min-height:100vh; color:#2C1A00; }
+.wrap { max-width:480px; margin:0 auto; padding:16px 16px 40px; }
+
+header { text-align:center; padding:20px 0 14px; }
+h1 { font-size:20px; font-weight:700; color:#7B3A00; }
+header p { font-size:12px; color:#B8855A; margin-top:3px; }
+
+.card { background:#fff; border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+.cl { font-size:11px; font-weight:700; color:#B8855A; letter-spacing:1.5px; margin-bottom:10px; }
+
+input[type="date"] {
+  width:100%; border:1.5px solid #E8D9C5; border-radius:10px;
+  padding:10px 12px; font-size:16px; color:#2C1A00;
+  background:#FDFAF6; outline:none; -webkit-appearance:none;
+}
+input[type="date"]:focus { border-color:#C4702A; }
+.dp { margin-top:8px; font-size:13px; color:#C4702A; font-weight:600; padding:6px 10px; background:#FFF4E8; border-radius:8px; }
+
+.empty-msg { text-align:center; font-size:13px; color:#C8A88A; padding:14px 0; line-height:1.6; }
+
+.mrow { padding:9px 0; border-bottom:1px solid #F5EDE0; }
+.mrow:last-child { border-bottom:none; }
+.mrow-top { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+.mrow-hrt { color:#E05050; font-size:14px; flex-shrink:0; }
+.mi-label { flex:1; border:1px solid #E8D9C5; border-radius:7px; padding:5px 8px; font-size:13px; font-weight:600; color:#2C1A00; background:#FDFAF6; outline:none; min-width:0; }
+.mi-label:focus { border-color:#C4702A; }
+.mi-addr { width:100%; border:1px solid #E8D9C5; border-radius:7px; padding:5px 8px; font-size:12px; color:#5A3A1A; background:#FDFAF6; outline:none; }
+.mi-addr:focus { border-color:#C4702A; }
+.btn-del { background:none; border:none; color:#D0B090; font-size:18px; cursor:pointer; padding:2px 4px; line-height:1; flex-shrink:0; }
+
+.btn-add-m { width:100%; border:1.5px dashed #E8D9C5; border-radius:10px; background:none; color:#C4702A; font-size:14px; font-weight:600; padding:10px; cursor:pointer; margin-top:8px; }
+.btn-add-m:active { background:#FFF4E8; }
+
+/* PICKER */
+.ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:99; }
+.ov.on { display:block; }
+.panel { display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-radius:20px 20px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.18); z-index:100; max-height:74vh; flex-direction:column; }
+.panel.on { display:flex; }
+
+.panel-hd { padding:14px 14px 12px; border-bottom:1px solid #F0E4D4; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.panel-hd input { flex:1; border:1.5px solid #E8D9C5; border-radius:8px; padding:8px 12px; font-size:15px; outline:none; color:#2C1A00; background:#FDFAF6; }
+.panel-hd input:focus { border-color:#C4702A; }
+.panel-x { background:none; border:none; font-size:22px; color:#B8855A; cursor:pointer; line-height:1; padding:0 2px; }
+
+.pb { overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; }
+
+.rg-label { padding:7px 16px 4px; font-size:11px; font-weight:700; color:#B8855A; letter-spacing:1.2px; background:#FDFAF6; border-bottom:1px solid #F0E4D4; }
+.pi { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; cursor:pointer; border-bottom:1px solid #FAF0E6; }
+.pi:active { background:#FFF8F0; }
+.pi.done { opacity:.3; pointer-events:none; }
+.pi-nm { font-size:14px; font-weight:600; color:#2C1A00; }
+.pi-ad { font-size:12px; color:#A08060; margin-top:1px; }
+.pi-ic { color:#C4702A; font-size:22px; line-height:1; font-weight:300; flex-shrink:0; margin-left:8px; }
+
+.manual { padding:14px 16px 20px; border-top:1px dashed #E8D9C5; }
+.manual-lb { font-size:11px; color:#B8855A; font-weight:700; margin-bottom:8px; letter-spacing:1px; }
+.mrow2 { display:flex; gap:8px; margin-bottom:7px; }
+.mrow2 input { flex:1; border:1.5px solid #E8D9C5; border-radius:8px; padding:8px 10px; font-size:14px; color:#2C1A00; background:#FDFAF6; outline:none; }
+.mrow2 input:focus { border-color:#C4702A; }
+.btn-manual { width:100%; background:#FFF4E8; color:#C4702A; border:1.5px solid #E8D9C5; border-radius:8px; padding:9px; font-size:13px; font-weight:600; cursor:pointer; }
+.btn-manual:active { background:#FFEBCF; }
+
+/* COPY */
+.btn-copy { width:100%; background:#C4702A; color:#fff; border:none; border-radius:14px; padding:15px; font-size:17px; font-weight:700; cursor:pointer; letter-spacing:1px; box-shadow:0 3px 12px rgba(196,112,42,.32); margin-bottom:12px; }
+.btn-copy:active { background:#A35A1E; }
+.btn-copy.done { background:#5A9E5A; box-shadow:0 3px 12px rgba(90,158,90,.3); }
+.warn { text-align:center; font-size:13px; color:#C05030; padding:10px; background:#FFF0EC; border-radius:8px; margin-bottom:12px; display:none; }
+
+.preview { background:#FDFAF6; border-radius:10px; padding:14px; font-size:13px; line-height:1.75; color:#2C1A00; white-space:pre-wrap; word-break:break-all; border:1px solid #F0E4D4; max-height:280px; overflow-y:auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🧄 蒜の包 發文工具</h1>
+    <p>選好日期與市場，一鍵複製</p>
+  </header>
+
+  <div class="card">
+    <div class="cl">📅 日期</div>
+    <input type="date" id="dateInput">
+    <div class="dp" id="dp"></div>
+  </div>
+
+  <div class="card">
+    <div class="cl">📍 今日市場</div>
+    <div id="todayList"></div>
+    <button class="btn-add-m" onclick="openPanel()">＋ 新增市場</button>
+  </div>
+
+  <div class="warn" id="warn">⚠️ 請至少加入一個市場</div>
+  <button class="btn-copy" id="copyBtn" onclick="doPost()">📋 複製貼文</button>
+
+  <div class="card">
+    <div class="cl">預覽</div>
+    <div class="preview" id="preview"></div>
+  </div>
+</div>
+
+<div class="ov" id="ov" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <div class="panel-hd">
+    <input type="search" id="sq" placeholder="搜尋市場名稱或地區…" oninput="renderPicker()">
+    <button class="panel-x" onclick="closePanel()">✕</button>
+  </div>
+  <div class="pb" id="pb"></div>
+</div>
+
+<script>
+const WD = ['日','一','二','三','四','五','六'];
+const p2 = n => String(n).padStart(2,'0');
+
+const STATIC = `
+-
+🧄蒜の包
+每日限量手工現作！全部商品皆為現烤！
+☎️合作電話：0925660355/李先生
+
+酥脆的焦糖色外皮
+咬下去是鬆軟的麵包體
+浸泡了滿滿蒜香炙燒香氣加上用料毫不手軟的爆漿乳酪
+比手掌還大的大蒜麵包
+適合全家大小、同事間下午茶
+💰單顆$85
+
+『吃金磚！賺金磚！年年賺！』
+
+‼️新品-宜蘭三星蔥餅‼️
+外皮酥脆金黃，蔥香濃郁，內餡鬆軟多汁，每一口都能感受到層次豐富的口感，而其表面點綴著大量芝麻，增添了香氣和口感的層次。
+
+‼️新品-美濃蘿蔔絲餅‼️
+特選美濃出產的蘿蔔絲，肉質細緻、水分豐富，經過巧妙的切絲處理後，保留了蘿蔔的天然甜味和嫩脆口感，搭配外皮的酥脆與芝麻的香氣，令人回味無窮。
+
+🥧千層丹麥手撕包🥧
+外皮酥脆，一層又一層鬆軟的內餡，每一口都能感受到它的綿密和柔軟。
+有原味、海鹽、肉桂
+
+🍞千層生乳吐司
+『奶香濃郁、細膩酥軟，越嚼越香！』
+師傅手工摺疊、麵團勁道、層次豐富！
+
+🔅金磚麵包🔅
+口味：香蒜、花生、奶酥
+一條45 三條110
+
+🥐麻糬可頌🥐
+口味：牛奶、黑糖、芋頭、紅豆
+一個30 四個100 
+
+#傳統市場早市
+早上6:00-中午（商品限量，售完為止）`;
+
+// ─── 市場資料庫（從兩張圖片整理）───
+const DB = [
+  // 苗栗
+  {r:'苗栗', n:'南苗市場',    a:'苗栗市米市街'},
+  {r:'苗栗', n:'北苗市場',    a:'苗栗市福星街'},
+  {r:'苗栗', n:'頭份市場',    a:'頭份鎮中山路5號'},
+  {r:'苗栗', n:'竹南市場',    a:'竹南鎮和平路97號'},
+  {r:'苗栗', n:'公館市場',    a:'公館鄉榮光街'},
+  {r:'苗栗', n:'大湖市場',    a:'大湖鄉民生路'},
+  {r:'苗栗', n:'卓蘭市場',    a:'卓蘭鎮復興路'},
+  {r:'苗栗', n:'後龍市場',    a:'後龍鎮中山路50號'},
+  {r:'苗栗', n:'通霄市場',    a:'通霄鎮光復路'},
+  {r:'苗栗', n:'苑裡市場',    a:'苑裡鎮大同路'},
+  {r:'苗栗', n:'銅鑼市場',    a:'銅鑼鄉銅鑼街'},
+  {r:'苗栗', n:'三灣市場',    a:'三灣鄉'},
+  // 台中
+  {r:'台中', n:'大甲早市',        a:'大甲區鎮正路'},
+  {r:'台中', n:'大甲晚市',        a:'大甲區中華街'},
+  {r:'台中', n:'清水市場',        a:'清水區城北街'},
+  {r:'台中', n:'梧棲市場',        a:'梧棲區雲集市場'},
+  {r:'台中', n:'沙鹿市場',        a:'沙鹿區大同街'},
+  {r:'台中', n:'大肚市場',        a:'大肚區沙田路二段'},
+  {r:'台中', n:'自強市場',        a:'大肚區遊圓路二段203巷'},
+  {r:'台中', n:'豐原市場',        a:'豐原區富春巷23巷'},
+  {r:'台中', n:'大雅市場',        a:'大雅區市場巷'},
+  {r:'台中', n:'潭子市場',        a:'潭子區潭興路二段'},
+  {r:'台中', n:'新社市場',        a:'新社區興社街四段80號'},
+  {r:'台中', n:'東勢市場',        a:'東勢鎮第三橫街'},
+  {r:'台中', n:'后里市場',        a:'后里區中山路'},
+  {r:'台中', n:'鳥日市場',        a:'鳥日區三民街'},
+  {r:'台中', n:'大里市場',        a:'大里區大里路350號'},
+  {r:'台中', n:'大里內新市場',    a:'大里區新仁路三段'},
+  {r:'台中', n:'十九甲市場',      a:'大里區新仁路一段208號'},
+  {r:'台中', n:'塗城市場',        a:'大里區塗城路'},
+  {r:'台中', n:'頭家厝市場',      a:'太平區張路一路79號'},
+  {r:'台中', n:'803市場',         a:'太平區中山路二段'},
+  {r:'台中', n:'霧峰市場',        a:'霧峰區'},
+  {r:'台中', n:'東興市場',        a:'北區五順街'},
+  {r:'台中', n:'太平市場',        a:'太平區太平路'},
+  {r:'台中', n:'北屯市場',        a:'北區進化北路'},
+  {r:'台中', n:'東光市場',        a:'北屯區北平路四段68號'},
+  {r:'台中', n:'昌平市場',        a:'北屯區金合巷'},
+  {r:'台中', n:'南屯市場',        a:'南屯區南農巷31弄'},
+  {r:'台中', n:'三民市場',        a:'南屯區民意街'},
+  {r:'台中', n:'五市市場',        a:'西區大明街'},
+  {r:'台中', n:'水湳市場',        a:'西屯區長榮路二段'},
+  {r:'台中', n:'西屯市場',        a:'西屯區光明路'},
+  {r:'台中', n:'何厝市場',        a:'西屯區何復二巷'},
+  {r:'台中', n:'篷圓市場',        a:'東區干城里建圓路224號'},
+  {r:'台中', n:'大智市場',        a:'東區大振街'},
+  {r:'台中', n:'向上市場',        a:'向上區中美街193巷'},
+  // 彰化
+  {r:'彰化', n:'彰化市場',        a:'彰化市永安街'},
+  {r:'彰化', n:'彰化菜市',        a:'彰化市菜市街'},
+  {r:'彰化', n:'彰化華陽市場',    a:'彰化市南菜路一段'},
+  {r:'彰化', n:'員林一市',        a:'員林鎮中正路'},
+  {r:'彰化', n:'員林華成市場',    a:'員林鎮博愛路'},
+  {r:'彰化', n:'鹿港市場',        a:'鹿港鎮大明路'},
+  {r:'彰化', n:'花壇市場',        a:'花壇鄉中正路'},
+  {r:'彰化', n:'秀水市場',        a:'秀水鄉文化街'},
+  {r:'彰化', n:'溪湖市場',        a:'溪湖鎮平和街'},
+  {r:'彰化', n:'北斗市場',        a:'北斗鎮光復路'},
+  {r:'彰化', n:'二林市場',        a:'二林鎮橘林路二段'},
+  {r:'彰化', n:'田中市場',        a:'田中鎮復興路'},
+  {r:'彰化', n:'和美市場',        a:'和美鎮愛物路'},
+  {r:'彰化', n:'永靖市場',        a:'永靖鄉裕農路'},
+  {r:'彰化', n:'社頭市場',        a:'社頭鄉民主斗路一段'},
+  {r:'彰化', n:'埤頭市場',        a:'埤頭鄉社一路一段'},
+  {r:'彰化', n:'二水市場',        a:'二水鄉良雄路'},
+  {r:'彰化', n:'伸港市場',        a:'伸港鄉信義巷3號'},
+  // 南投
+  {r:'南投', n:'南投早市',    a:'南投市育業路'},
+  {r:'南投', n:'南投晚市',    a:'南投市民權街'},
+  {r:'南投', n:'中興市場',    a:'南投市光華路'},
+  {r:'南投', n:'草屯市場',    a:'草屯鎮芹草路一段'},
+  {r:'南投', n:'埔里市場',    a:'埔里鎮南昌街'},
+  {r:'南投', n:'水里市場',    a:'水里鄉民族路'},
+  {r:'南投', n:'魚池市場',    a:'魚池鄉魚池路354巷2號'},
+  {r:'南投', n:'名間市場',    a:'名間鄉市場巷20之2號'},
+  {r:'南投', n:'竹山市場',    a:'竹山鎮頂橫街'},
+  // 雲林
+  {r:'雲林', n:'斗六市場',    a:'斗六市愛國街'},
+  {r:'雲林', n:'虎尾市場',    a:'虎尾鎮中正路'},
+  {r:'雲林', n:'西螺市場',    a:'西螺鎮建興路'},
+  {r:'雲林', n:'斗南市場',    a:'斗南鎮圓環街'},
+  {r:'雲林', n:'麥寮市場',    a:'麥寮鄉表福路'},
+  {r:'雲林', n:'崙背市場',    a:'崙背鄉民主路228號'},
+  {r:'雲林', n:'北港市場',    a:'北港鎮民治路'},
+  {r:'雲林', n:'大林市場',    a:'大林鎮中山路'},
+  {r:'雲林', n:'四湖市場',    a:'四湖鄉市場街102號'},
+  // 新竹
+  {r:'新竹', n:'果菜市場',    a:'新竹市民主路'},
+  {r:'新竹', n:'關東橋市場',  a:'新竹市開東路'},
+  {r:'新竹', n:'竹北市場',    a:'竹北市仁愛街'},
+  {r:'新竹', n:'竹蓮市場',    a:'新竹市竹蓮街'},
+  {r:'新竹', n:'鎮華市場',    a:'新竹市鎮華街'},
+  {r:'新竹', n:'新埔市場',    a:'新埔鎮中正路359巷'},
+  // 桃園
+  {r:'桃園', n:'楊梅市場',    a:'楊梅區復華街'},
+  {r:'桃園', n:'新民市場',    a:'桃園市明德街41巷'},
+  {r:'桃園', n:'南門市場',    a:'桃園市嘉南西街'},
+  {r:'桃園', n:'龍潭市場',    a:'龍潭區龍崗路'},
+  {r:'桃園', n:'大溪市場',    a:'大溪區四維路'},
+  {r:'桃園', n:'大園市場',    a:'大園區忠孝三街'},
+  {r:'桃園', n:'南崙市場',    a:'桃園市南嘉街'},
+  {r:'桃園', n:'龜山市場',    a:'龜山區中央南路'},
+  {r:'桃園', n:'興國市場',    a:'桃園市元化路3段'},
+];
+
+// ─── State ───
+let today = [];
+let uid = 1;
+
+// ─── Date ───
+function initDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+}
+function refreshDP(v) {
+  if (!v) return;
+  const [y,m,d] = v.split('-').map(Number);
+  const wd = WD[new Date(y,m-1,d).getDay()];
+  document.getElementById('dp').textContent = `→ 🍞${p2(m)} / ${p2(d)}（${wd}）快閃市場`;
+}
+
+// ─── Today list ───
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function renderToday() {
+  const el = document.getElementById('todayList');
+  if (!today.length) {
+    el.innerHTML = '<div class="empty-msg">尚未選擇市場<br>點下方「＋ 新增市場」加入</div>';
+    return;
+  }
+  el.innerHTML = today.map(m => `
+    <div class="mrow">
+      <div class="mrow-top">
+        <span class="mrow-hrt">❤️</span>
+        <input class="mi-label" value="${esc(m.label)}"
+          onchange="upLabel(${m.id},this.value)">
+        <button class="btn-del" onclick="delM(${m.id})">✕</button>
+      </div>
+      <input class="mi-addr" value="${esc(m.addr)}" placeholder="地址"
+        onchange="upAddr(${m.id},this.value)">
+    </div>`).join('');
+}
+function upLabel(id, v) { const m=today.find(x=>x.id===id); if(m){m.label=v; updatePrev();} }
+function upAddr(id, v)  { const m=today.find(x=>x.id===id); if(m){m.addr=v; updatePrev();} }
+function delM(id) { today=today.filter(x=>x.id!==id); renderToday(); renderPicker(); updatePrev(); }
+
+// ─── Picker ───
+function openPanel() {
+  document.getElementById('panel').classList.add('on');
+  document.getElementById('ov').classList.add('on');
+  document.getElementById('sq').value = '';
+  renderPicker();
+  setTimeout(() => document.getElementById('sq').focus(), 150);
+}
+function closePanel() {
+  document.getElementById('panel').classList.remove('on');
+  document.getElementById('ov').classList.remove('on');
+}
+function addFromDB(idx) {
+  const m = DB[idx];
+  const label = m.r + m.n;
+  if (today.some(x => x.label === label)) return;
+  today.push({id:uid++, label, addr:m.a});
+  renderToday(); renderPicker(); updatePrev();
+}
+function renderPicker() {
+  const q = document.getElementById('sq').value.trim().toLowerCase();
+  const used = new Set(today.map(x => x.label));
+  let html = '';
+
+  if (!q) {
+    html += `<div class="rg-label">全部市場</div>`;
+  }
+
+  const filtered = DB.filter(m =>
+    !q || (m.r+m.n).includes(q) || m.a.toLowerCase().includes(q) || m.r.includes(q)
+  );
+  const regions = [...new Set(filtered.map(m => m.r))];
+  regions.forEach(r => {
+    html += `<div class="rg-label" style="font-size:10px;padding-left:20px;background:#fff">${r}</div>`;
+    filtered.filter(m => m.r === r).forEach(m => {
+      const label = m.r + m.n, idx = DB.indexOf(m);
+      const done = used.has(label);
+      html += `<div class="pi${done?' done':''}" data-idx="${idx}">
+        <div><div class="pi-nm">${label}</div><div class="pi-ad">${m.a}</div></div>
+        <div class="pi-ic">${done?'✓':'＋'}</div></div>`;
+    });
+  });
+
+  // Manual add
+  html += `<div class="manual">
+    <div class="manual-lb">手動輸入</div>
+    <div class="mrow2">
+      <input id="mr" placeholder="縣市" style="max-width:80px">
+      <input id="mn" placeholder="市場名稱">
+    </div>
+    <div class="mrow2"><input id="ma" placeholder="地址（選填）"></div>
+    <button class="btn-manual" onclick="addManual()">＋ 加入今日</button>
+  </div>`;
+
+  const pb = document.getElementById('pb');
+  pb.innerHTML = html;
+  pb.onclick = e => {
+    const item = e.target.closest('.pi');
+    if (!item || item.classList.contains('done')) return;
+    addFromDB(+item.dataset.idx);
+  };
+}
+function addManual() {
+  const r = document.getElementById('mr').value.trim();
+  const n = document.getElementById('mn').value.trim();
+  const a = document.getElementById('ma').value.trim();
+  if (!n) { document.getElementById('mn').focus(); return; }
+  today.push({id:uid++, label:r+n, addr:a});
+  renderToday(); updatePrev(); closePanel();
+}
+
+// ─── Generate & Copy ───
+function generate() {
+  const v = document.getElementById('dateInput').value;
+  if (!v || !today.length) return '';
+  const [y,m,d] = v.split('-').map(Number);
+  const wd = WD[new Date(y,m-1,d).getDay()];
+  const hdr = `🍞${p2(m)} / ${p2(d)}（${wd}）快閃市場`;
+  const locs = today.map(m2 => m2.addr ? `❤️${m2.label}：${m2.addr}` : `❤️${m2.label}`).join('\n');
+  return `${hdr}\n\n${locs}${STATIC}`;
+}
+function updatePrev() {
+  document.getElementById('warn').style.display = today.length ? 'none' : 'block';
+  document.getElementById('preview').textContent = generate() || '（請先新增市場）';
+}
+async function doPost() {
+  const txt = generate();
+  if (!txt) { document.getElementById('warn').style.display = 'block'; return; }
+  try { await navigator.clipboard.writeText(txt); } catch {
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  }
+  const b = document.getElementById('copyBtn');
+  b.textContent = '✅ 已複製！'; b.classList.add('done');
+  setTimeout(() => { b.textContent = '📋 複製貼文'; b.classList.remove('done'); }, 2500);
+}
+
+// ─── Init ───
+document.getElementById('dateInput').value = initDate();
+document.getElementById('dateInput').addEventListener('change', e => { refreshDP(e.target.value); updatePrev(); });
+refreshDP(initDate());
+renderToday();
+updatePrev();
+</script>
+</body>
+</html>
