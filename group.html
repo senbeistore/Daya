@@ -89,7 +89,7 @@ input[type="date"]:focus { border-color:#C4702A; }
 <div class="wrap">
   <header>
     <h1>🧄 蒜の包 社團發文工具</h1>
-    <p>選好日期與市場，隨機生成吸睛文案　版本 11/03 20:55</p>
+    <p>選好日期與市場，隨機生成吸睛文案　版本 11/03 20:57</p>
   </header>
 
   <div class="card">
@@ -465,15 +465,29 @@ function shuffle(a) {
   }
   return b;
 }
+const DECKS = {};
+function draw(key, arr) {
+  let d = DECKS[key];
+  if (!d || !d.list.length) {
+    const l = shuffle(arr);
+    if (d && d.last !== undefined && l.length > 1 && l[0] === d.last) {
+      [l[0], l[l.length - 1]] = [l[l.length - 1], l[0]];
+    }
+    d = DECKS[key] = { list: l, last: d ? d.last : undefined };
+  }
+  const v = d.list.shift();
+  d.last = v;
+  return v;
+}
 function rollCopy() {
   const mode = document.getElementById('mode').value;
   let rest = shuffle(PRODUCTS);
   if (mode === 'pick') rest = rest.slice(0, 6);
   return {
-    hook: pick(HOOKS),
-    hero: pick(HERO.d),
-    closing: pick(CLOSINGS),
-    items: rest.map(p => ({t:p.t, f:p.f, p:p.p, d:pick(p.d)})),
+    hook: draw('hook', HOOKS),
+    hero: draw('hero', HERO.d),
+    closing: draw('closing', CLOSINGS),
+    items: rest.map(p => ({t:p.t, f:p.f, p:p.p, d:draw('p:' + p.t, p.d)})),
     tags: shuffle(TAGS).slice(0, 2)
   };
 }
