@@ -76,9 +76,6 @@ input[type="date"]:focus { border-color:#C4702A; }
 .btn-roll { width:100%; background:#FFF4E8; color:#C4702A; border:1.5px solid #E8D9C5; border-radius:10px; padding:12px; font-size:15px; font-weight:700; cursor:pointer; }
 .btn-roll:active { background:#FFEBCF; }
 
-.seg { display:flex; background:#F0E4D4; border-radius:12px; padding:4px; margin-bottom:12px; }
-.seg-b { flex:1; border:none; background:none; padding:10px 6px; font-size:14px; font-weight:700; color:#A08060; border-radius:9px; cursor:pointer; }
-.seg-b.on { background:#fff; color:#C4702A; box-shadow:0 1px 4px rgba(0,0,0,.1); }
 
 /* COPY */
 .btn-copy { width:100%; background:#C4702A; color:#fff; border:none; border-radius:14px; padding:15px; font-size:17px; font-weight:700; cursor:pointer; letter-spacing:1px; box-shadow:0 3px 12px rgba(196,112,42,.32); margin-bottom:12px; }
@@ -93,13 +90,9 @@ input[type="date"]:focus { border-color:#C4702A; }
 <div class="wrap">
   <header>
     <h1>🧄 蒜の包 發文工具</h1>
-    <p>選好日期與市場，一鍵複製　版本 11/03 20:59</p>
+    <p>選好日期與市場，一鍵複製　版本 11/03 21:01</p>
   </header>
 
-  <div class="seg">
-    <button class="seg-b on" id="segFixed" onclick="setMode('fixed')">📋 固定貼文</button>
-    <button class="seg-b" id="segGroup" onclick="setMode('group')">🎲 社團隨機文案</button>
-  </div>
 
   <div class="card">
     <div class="cl">📅 日期</div>
@@ -113,21 +106,13 @@ input[type="date"]:focus { border-color:#C4702A; }
     <button class="btn-add-m" onclick="openPanel()">＋ 新增市場</button>
   </div>
 
-  <div class="card" id="rollCard" style="display:none">
-    <div class="cl">🎲 文案設定</div>
-    <select class="mode-sel" id="mode" onchange="reroll()">
-      <option value="all">列出全部商品</option>
-      <option value="pick">隨機精選 6 項商品</option>
-    </select>
-    <button class="btn-roll" onclick="reroll()">🎲 重新隨機生成文案</button>
-    <div id="stat" style="margin-top:8px;font-size:12px;color:#B8855A;text-align:center"></div>
-  </div>
-
   <div class="warn" id="warn">⚠️ 請至少加入一個市場</div>
+  <button class="btn-roll" style="margin-bottom:8px" onclick="reroll()">🎲 隨機生成文案</button>
+  <div id="backFixed" style="display:none;text-align:center;margin:0 0 10px"><a href="#" onclick="backFixed();return false" style="font-size:13px;color:#B8855A;text-decoration:underline">↩︎ 改回固定文案</a></div>
   <button class="btn-copy" id="copyBtn" onclick="doPost()">📋 複製貼文</button>
 
   <div class="card">
-    <div class="cl">預覽</div>
+    <div class="cl" id="pvLabel">預覽・固定文案</div>
     <div class="preview" id="preview"></div>
   </div>
 </div>
@@ -551,9 +536,7 @@ function draw(key, arr) {
   return v;
 }
 function rollCopy() {
-  const mode = document.getElementById('mode').value;
-  let rest = shuffle(PRODUCTS);
-  if (mode === 'pick') rest = rest.slice(0, 6);
+  const rest = shuffle(PRODUCTS);
   return {
     hook: draw('hook', HOOKS),
     hero: draw('hero', HERO.d),
@@ -563,15 +546,12 @@ function rollCopy() {
   };
 }
 let MODE = 'fixed';
-function reroll() { COPY = rollCopy(); updatePrev(); }
-function setMode(m) {
-  MODE = m;
-  document.getElementById('segFixed').classList[m === 'fixed' ? 'add' : 'remove']('on');
-  document.getElementById('segGroup').classList[m === 'group' ? 'add' : 'remove']('on');
-  document.getElementById('rollCard').style.display = m === 'group' ? 'block' : 'none';
-  try { localStorage.setItem('postMode', m); } catch (e) {}
-  updatePrev();
+function syncUI() {
+  document.getElementById('backFixed').style.display = MODE === 'group' ? 'block' : 'none';
+  document.getElementById('pvLabel').textContent = MODE === 'group' ? '預覽・隨機文案' : '預覽・固定文案';
 }
+function reroll() { MODE = 'group'; COPY = rollCopy(); syncUI(); updatePrev(); }
+function backFixed() { MODE = 'fixed'; syncUI(); updatePrev(); }
 function whenText(y, m, d) {
   const same = (dt) => dt.getFullYear() === y && dt.getMonth() + 1 === m && dt.getDate() === d;
   const t = new Date(); if (same(t)) return '今天';
@@ -851,8 +831,6 @@ document.getElementById('dateInput').addEventListener('change', e => { refreshDP
 refreshDP(initDate());
 renderToday();
 updatePrev();
-document.getElementById('stat').textContent = `目前文案庫：大蒜麵包 ${HERO.d.length} 種、其他商品各 ${Math.min(...PRODUCTS.map(x => x.d.length))} 種以上、開頭 ${HOOKS.length} 種、結尾 ${CLOSINGS.length} 種`;
-try { if (localStorage.getItem('postMode') === 'group') setMode('group'); } catch (e) {}
 </script>
 </body>
 </html>
